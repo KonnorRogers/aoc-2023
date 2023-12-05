@@ -40,17 +40,14 @@ input = File.read(File.expand_path("input-1.txt", __dir__))
 # INPUT
 # ).read
 
-class Seed
-  attr_accessor :id
-
-  def initialize(id)
-    @id = id
-  end
-
-  def convert(ranges, num)
-    # 50 98 2 -> soil: 50, seeds: 98 + 1
-    # 52 50 48 -> soil: 52, seeds: 50
-
+# class Seed
+#   attr_accessor :id
+#
+#   def initialize(id)
+#     @id = id
+#   end
+#
+  def location_to_seed(ranges, num)
     num = Integer(num)
     final_num = num
 
@@ -59,20 +56,19 @@ class Seed
       seed_number = Integer(range[1])
       length = Integer(range[2])
 
-      is_possible_seed_number = num >= seed_number && num <= seed_number + length
+      is_possible_seed_number = num >= soil_number && num <= soil_number + length
 
       if final_num == num && is_possible_seed_number
-        final_num = num + (soil_number - seed_number)
+        final_num = num + (seed_number - soil_number)
       end
+
+      # p "num: #{final_num} soil_number: #{soil_number}, seed_number: #{seed_number}"
+      # p final_num
     end
 
     final_num
   end
-end
-
-# 50 98 2
-# 52 50 48
-# [range_start, source_range_start, range_length]
+# end
 
 hash = {
   "seeds" => [],
@@ -100,6 +96,8 @@ hash["light-to-temperature"] = to_range(inputs[5].split(/:\s+/)[1])
 hash["temperature-to-humidity"] = to_range(inputs[6].split(/:\s+/)[1])
 hash["humidity-to-location"] = to_range(inputs[7].split(/:\s+/)[1])
 
+# p hash["humidity-to-location"]
+
 seed_ranges = []
 
 idx = -1
@@ -110,50 +108,29 @@ hash["seeds"].each_with_index do |num, index|
   seed_ranges[idx] << Integer(num)
 end
 
+hash["seeds"] = seed_ranges.map { |r| (r[0]..r[0] + r[1]) }
 
-# seeds = []
-# seed_ranges.each do |range|
-#   start = range[0]
-#   length = range[1]
-#
-#   seeds << (start..length)
-#   #
-#   # # Find the lowest valid seed numbers
-#   # length.times do |num|
-#   #   seeds << start + num
-#   # end
-# end
 
-hash["seeds"] = seed_ranges
+final_num = nil
+id = -1
 
-locations = hash["seeds"].map do |range|
-  final_num = nil
-  Seed.new(Integer(id)).tap do |seed|
-    soil_num = seed.convert(hash["seed-to-soil"], id)
-    fertilizer_num = seed.convert(hash["soil-to-fertilizer"], soil_num)
-    water_num = seed.convert(hash["fertilizer-to-water"], fertilizer_num)
-    light_num = seed.convert(hash["water-to-light"], water_num)
-    temp_num = seed.convert(hash["light-to-temperature"], light_num)
-    humidity_num = seed.convert(hash["temperature-to-humidity"], temp_num)
-    location_num = seed.convert(hash["humidity-to-location"], humidity_num)
-    final_num = location_num
+final_num = nil
+loop do
+  id += 1
+  humidity_num = location_to_seed(hash["humidity-to-location"], id)
+  temperature_num = location_to_seed(hash["temperature-to-humidity"], humidity_num)
+  light_num = location_to_seed(hash["light-to-temperature"], temperature_num)
+  water_num = location_to_seed(hash["water-to-light"], light_num)
+  fertilizer_num = location_to_seed(hash["fertilizer-to-water"], water_num)
+  soil_num = location_to_seed(hash["soil-to-fertilizer"], fertilizer_num)
+  seed_num = location_to_seed(hash["seed-to-soil"], soil_num)
+  final_num = id
 
-    # debug = {
-    #   soil_num: soil_num,
-    #   fertilizer_num: fertilizer_num,
-    #   water_num: water_num,
-    #   light_num: light_num,
-    #   temp_num: temp_num,
-    #   humidity_num: humidity_num,
-    #   location_num: location_num
-    # }
-    # p debug
-  end
-
-  final_num
+  break if hash["seeds"].any? { |range| range.cover?(seed_num) }
 end
 
-p locations.min
+puts final_num
+
 
 #    Seed 79, soil 81, fertilizer 81, water 81, light 74, temperature 78, humidity 78, location 82.
 #    Seed 14, soil 14, fertilizer 53, water 49, light 42, temperature 42, humidity 43, location 43.
