@@ -1,6 +1,5 @@
 
 require "stringio"
-# require "strscan"
 
 input = File.readlines(File.expand_path("input-1.txt", __dir__))
 
@@ -14,15 +13,6 @@ input = File.readlines(File.expand_path("input-1.txt", __dir__))
 # Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 # INPUT
 # ).readlines
-
-class Array
-  def each!
-    while count > 0
-      yield(shift)
-    end
-  end
-end
-
 
 class Card
   attr_accessor :id
