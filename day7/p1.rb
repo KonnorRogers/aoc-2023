@@ -46,12 +46,9 @@ CARD_TO_NUM = {
 def calculate_kicker(cards)
   # 6 digits because we have 5 cards
   final = 0
-  start = 1_000_000_000_000_000
   cards.length.times do |i|
     card = cards[i]
-    start = start / 100
-
-    final += (start * CARD_TO_NUM[card])
+    final += (13 ** (cards.length - i)) * CARD_TO_NUM[card]
   end
   final
 end
